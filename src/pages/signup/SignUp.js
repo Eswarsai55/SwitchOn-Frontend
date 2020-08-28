@@ -93,7 +93,7 @@ class SignUp extends BaseComponent {
       } else {
         this.setState({
           inProgress: false,
-          signupSuccess: true,
+          openSuccessModal: true,
         });
       }
     })
@@ -108,12 +108,18 @@ class SignUp extends BaseComponent {
     });
   };
 
+  closeSuccessModal = () => {
+    this.setState({
+      openSuccessModal: false,
+    })
+  }
+
   render() {
     const { departmentOptions } = this.state;
     return (
       <Fragment>
-        {this.state.signupSuccess &&
-          <SuccessModal show={this.state.signupSuccess} 
+        {this.state.openSuccessModal &&
+          <SuccessModal show={this.state.openSuccessModal} 
             title="Account creation Successful"
             formattedDepartments={departmentOptions}
             subMessage="to Login"
