@@ -11,6 +11,7 @@ import _ from 'lodash';
 import { getToken } from '../../utils/ManageToken';
 import jwt from 'jsonwebtoken';
 import fetchRequestData from '../../actions/getrequestData';
+import getUser from '../../actions/getUser';
 
 class Request extends BaseComponent {
   constructor() {
@@ -25,26 +26,39 @@ class Request extends BaseComponent {
   }
 
   componentDidMount = () => {
-    this.getRequests();
+    this.getUsers();
+  }
+
+  getUsers = () => {
+    getUser().then(users => {
+      this.setState({
+        users
+      }, () => {
+        this.getRequests();
+      })
+    })
   }
 
   getRequests = () => {
     const requests = [];
     const token = getToken();
-    const encryptedData = jwt.decode(token)
+    const encryptedData = jwt.decode(token);
+    const { users } = this.state;
     fetchRequestData().then(response => {
       for (let i=0; i<response.length; i++) {
         if (response[i].departmentId === encryptedData.departmentId) {
+          const user = users.find(user => user._id === response[i].userId);
           requests.push({
             createdOn: new Date(response[i].createdOn).toDateString(),
             modifiedOn: new Date(response[i].modifiedOn).toDateString(),
             reqId: response[i]._id,
             message: response[i].message,
-            allocatedTo: response[i].userId,
+            allocatedTo: user.firstName + user.lastName,
             status: response[i].status,
           })
         }
       }
+      console.log(requests)
       this.setState({
         requests,
       })

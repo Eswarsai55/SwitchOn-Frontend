@@ -32,7 +32,7 @@ class Rejected extends BaseComponent {
   getRejectedRequests = () => {
     const rejectedRequests = [];
     const token = getToken();
-    const encryptedData = jwt.decode(token)
+    const encryptedData = jwt.decode(token);
     fetchRequestData().then(response => {
       for (let i=0; i<response.length; i++) {
         if (response[i].status === 'REJECTED' && response[i].userId === encryptedData.id) {
