@@ -3,30 +3,73 @@
 }
 
 .App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+  animation: App-logo-spin infinite 20s linear;
+  height: 80px;
 }
 
 .App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
+  background-color: #222;
+  height: 150px;
+  padding: 20px;
   color: white;
 }
 
-.App-link {
-  color: #61dafb;
+.App-title {
+  font-size: 1.5em;
 }
+
+.App-intro {
+  font-size: large;
+}
+
+.btn-link {
+  padding-left: 0;
+}
+
+.custom-link {
+  padding-top: 0;
+  margin: -6px 0 10px;
+}
+
+.btn-primary {
+  background-color: #0275d8;
+  border: solid 1px #0275d8;
+  background-image: none;
+  text-shadow: none;
+  box-shadow: none;
+}
+
+/*.btn-primary:hover,*/
+.btn-primary:focus {
+  background-color: #0275d8;
+  border: solid 1px #0275d8;
+}
+
+.error-text {
+  color: #a94442;
+  text-align: left;
+  margin-bottom: 3rem !important;
+  font-size: 1.4rem !important;
+  font-family: Poppins-Medium, Arial, Helvetica, sans-serif !important;
+}
+
+.modal-header {
+  background-color: rgba(0, 0, 0, 0.85);
+  color: #fff;
+}
+
+.modal-header .close {
+  color: #fff;
+  opacity: 1;
+  font-size: 2.6rem;
+}
+
+.modal-header .modal-title {
+  font-weight: 400;
+  font-size: 17px;
+}
+
+
 
 @keyframes App-logo-spin {
   from {

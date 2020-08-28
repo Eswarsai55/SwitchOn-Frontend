@@ -1,0 +1,140 @@
+// Making 1rem=10px
+html {
+  font-size: 10px;
+}
+
+body {
+  background-color: $light-grey;
+}
+
+// FORM-ERROR STYLE
+.form-error {
+  color: $red !important;
+  font-size: 1.2rem !important;
+}
+
+// GLOBAL BUTTON STYLES
+.p-btn {
+  background: $primary;
+  border-color: $primary;
+  padding: 0.8rem 2rem;
+  color: $white;
+  font-size: 1.4rem;
+  border-radius: 1.8rem;
+  font-weight: 900;
+
+  &:hover, &:visited, &:active, &:active:focus, &:focus {
+    color: $white;
+    background-color: $primary;
+    border-color: $primary;
+  }
+}
+
+.f-medium {
+  font-size: 2.5rem;
+}
+
+// COLOR CLASSES
+.green {
+  color: $green;
+}
+
+.red {
+  color: $red;
+}
+
+.primary {
+  color: $primary;
+}
+
+.m-b-10 {
+  margin-bottom: 1rem;
+}
+
+// OVERRIDE THE CHECKBOX PRIMARY COLOR
+.pretty input:checked ~ .state.p-primary label:after, .pretty.p-toggle .state.p-primary label:after {
+  background-color: $primary !important;
+}
+
+// REFUNDABLE TAG COMPONENT
+.ref-text.tag-green {
+  background-color: $green;
+  padding: .4rem .8rem;
+  color: $white;
+  border-radius: 2rem;
+  display: inline-block;
+  margin-top: 0;
+}
+
+// SELECT DROPDOWN
+.Select-menu-outer {
+  z-index: 2;
+}
+
+// FROM WRAPPER
+.from-wrapper {
+  position: relative;
+}
+
+// WRAPPER FOR LOADER
+.modal-loader-wrapper {
+  padding: 5rem 1rem 4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.page-loader-wrapper {
+  @extend .modal-loader-wrapper;
+  padding: 15rem 1rem 9rem;
+}
+
+// WHITE LOADER
+.lds-ring {
+  display: inline-block;
+  position: relative;
+  width: 64px;
+  height: 64px;
+  top: 10%;
+}
+
+// BLACK LOADER
+.lds-ring.black div {
+  border: 6px solid $black;
+  border-color: $black transparent transparent transparent;
+}
+
+// SUPPORTING STYLE FOR LOADER
+.lds-ring div {
+  box-sizing: border-box;
+  display: block;
+  position: absolute;
+  width: 51px;
+  height: 51px;
+  margin: 6px;
+  border: 6px solid #fff;
+  border-radius: 50%;
+  animation: lds-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+  border-color: #fff transparent transparent transparent;
+}
+
+.lds-ring div:nth-child(1) {
+  animation-delay: -0.45s;
+}
+
+.lds-ring div:nth-child(2) {
+  animation-delay: -0.3s;
+}
+
+.lds-ring div:nth-child(3) {
+  animation-delay: -0.15s;
+}
+
+@keyframes lds-ring {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
