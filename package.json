@@ -29,8 +29,13 @@
     "reactstrap": "^8.1.1"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
+    "start": "cross-env REACT_APP_ENV=production PORT=3000 react-scripts start",
+    "staging": "cross-env REACT_APP_ENV=staging PORT=3000 react-scripts start",
+    "dev": "cross-env REACT_APP_ENV=dev PORT=9000 react-scripts start",
+    "testing": "cross-env REACT_APP_ENV=test PORT=9000 react-scripts start",
+    "build": "cross-env REACT_APP_ENV=production react-scripts build",
+    "build-staging": "cross-env REACT_APP_ENV=staging react-scripts build",
+    "build-dev": "cross-env REACT_APP_ENV=dev react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
