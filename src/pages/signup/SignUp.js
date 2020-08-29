@@ -235,7 +235,6 @@ class SignUp extends BaseComponent {
                       control={{
                         type: TextControl,
                         settings: {
-                          type: TextControl,
                           placeholder: "",
                         }
                       }}
