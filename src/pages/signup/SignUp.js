@@ -240,7 +240,7 @@ class SignUp extends BaseComponent {
                       }}
                     />
                   </Col>
-                  <Col>
+                  <Col md="6">
                     <CustomFormElement
                       valueLink={this.linkState(this, 'selectedDepartment')}
                       label="Department"
