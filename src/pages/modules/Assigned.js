@@ -11,13 +11,14 @@ import _ from 'lodash';
 import fetchRequestData from '../../actions/getrequestData';
 import { getToken } from '../../utils/ManageToken';
 import jwt from 'jsonwebtoken';
+import AXIOS from "../../utils/Axios";
 import ConfirmationModal from "../../common_components/modals/ConfirmationModal";
 
-class Pending extends BaseComponent {
+class Assigned extends BaseComponent {
   constructor() {
     super();
     this.state = {
-      pendingRequests: [],
+      assignedRequests: [],
       apiError: {
         isError: false,
         data: ""
@@ -26,26 +27,27 @@ class Pending extends BaseComponent {
   }
   
   componentDidMount = () => {
-    this.getPendingRequests();
+    this.getAssignedRequests();
   }
 
-  getPendingRequests = () => {
-    const pendingRequests = [];
+  getAssignedRequests = () => {
+    const assignedRequests = [];
     const token = getToken();
     const encryptedData = jwt.decode(token)
     fetchRequestData().then(response => {
       for(let i=0;i<response.length; i++) {
-        if(response[i].status === 'PENDING' && response[i].ownerId === encryptedData.id) {
-          pendingRequests.push({
+        if(response[i].status === 'PENDING' && response[i].allocatedUserId === encryptedData.id) {
+          assignedRequests.push({
             reqId: response[i]._id,
             createdOn: new Date(response[i].createdOn).toDateString(),
             modifiedOn: new Date(response[i].modifiedOn).toDateString(),
             message: response[i].message,
+            action: this.addButtons(response[i]),
           })
         }
       }
       this.setState({
-        pendingRequests,
+        assignedRequests,
         apiError: {
           isError: false,
           data: "",
@@ -55,20 +57,103 @@ class Pending extends BaseComponent {
       this.setState({
         apiError: {
           isError: true,
-          data: "Error while fetching pending requests",
+          data: err.message,
         }
       })
     })
   }
 
-  render() {
-    const { SearchBar } = Search;
-    const { pendingRequests, apiError } = this.state;
+  addButtons = (requestData) => {
+    const btnStyle = {
+      "marginRight": "0.5rem",
+      "marginTop": "0.5rem",
+    };
     return (
       <Fragment>
+        <Button style={btnStyle} className="hbt-enable-btn" variant="raised" bsStyle="primary" onClick={() => this.approveRequest(requestData)}>
+          Approve
+        </Button>
+        <Button style={btnStyle} className="hbt-disable-btn" variant="raised" bsStyle="primary" onClick={() => this.openConfirmationModal(requestData)}>
+          Reject
+        </Button>
+      </Fragment>
+    )
+  }
+
+  approveRequest = (requestData) => {
+    const { _id } = requestData;
+    const data = Object.assign({}, {
+      'id': _id,
+      'status': 'APPROVED'
+    })
+    AXIOS.SERVER.put('/request/update', data).then(response => {
+      this.getAssignedRequests();
+
+    }).catch(err => {
+      this.setState({
+        apiError: {
+          isError: true,
+          data: "Error while updating request",
+        }
+      })
+    })
+
+  }
+
+  openConfirmationModal = (requestData) => {
+    if (requestData._id !== 0) {
+      this.setState({
+        confirmationModal: true,
+        id: requestData._id,
+      });
+    }
+  };
+
+  rejectRequest = (id, reason) => {
+    const data = Object.assign({}, {
+      id,
+      'status': 'REJECTED',
+      reason,
+    })
+    AXIOS.SERVER.put('/request/update', data).then(response => {
+      this.setState({
+        confirmationModal: false,
+        id: "",
+      })
+      this.getAssignedRequests();
+    }).catch(err => {
+      this.setState({
+        apiError: {
+          isError: true,
+          data: "Error while updating request",
+        }
+      })
+    })
+  }
+
+  closeConfirmationModal = () => {
+    this.setState({
+      confirmationModal: false,
+    })
+  }
+
+  render() {
+    const { SearchBar } = Search;
+    const { assignedRequests, apiError } = this.state;
+    const updatedColumns = _.cloneDeep(COLUMNS);
+    updatedColumns.push({
+      dataField: 'action',
+      text: 'Action'
+    })
+    const title = "Are you sure to reject this request?"
+    return (
+      <Fragment>
+        {this.state.confirmationModal &&
+          <ConfirmationModal id={this.state.id} title={title} reject={this.rejectRequest} show={true} onClose={this.closeConfirmationModal}/>
+        }
         <Grid fluid>
           <div className="top-section">
-            <Topbar activeKey={3}/>
+            <Topbar activeKey={6}/>
           </div>
           <div className="main-section">
             <div className="right-side-section">
@@ -81,7 +166,7 @@ class Pending extends BaseComponent {
                 <Row>
                   <Col className="table-wrapper" md={12}>
                     {apiError.isError && <p className="error-text">{apiError.data}</p>}
-                    <ToolkitProvider keyField="id" data={pendingRequests} columns={COLUMNS} search>
+                    <ToolkitProvider keyField="id" data={assignedRequests} columns={updatedColumns} search>
                       {props => (
                         <div>
                           <Grid className="enquiry-filter-container">
@@ -112,4 +197,4 @@ class Pending extends BaseComponent {
   }
 }
 
-export default Pending;
+export default Assigned;

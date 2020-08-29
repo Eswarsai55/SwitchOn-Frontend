@@ -1,5 +1,5 @@
 import React, {Fragment} from "react";
-import { Grid } from "react-bootstrap";
+import { Grid, Row, Col } from "react-bootstrap";
 
 import BaseComponent from "../../utils/BaseComponent";
 import Topbar from '../../common_components/navbar/Topbar';
@@ -10,6 +10,9 @@ import Validator from "../../utils/Validator";
 import SubmitButton from "../../utils/SubmitButton";
 import {TextControl} from "../../utils/TextControl";
 import AXIOS from '../../utils/Axios';
+import jwt from 'jsonwebtoken';
+import { getToken } from '../../utils/ManageToken';
+import getUser from '../../actions/getUser';
 import CustomSelectControl from "../../utils/CustomSelectControl";
 import SuccessModal from "../../common_components/modals/SuccessModal";
 import { withRouter } from 'react-router-dom';
@@ -33,6 +36,55 @@ class Form extends BaseComponent {
   componentDidMount = () => {
     this.getDepartments();
   }
+
+  verifyToken = () => {
+    const token = getToken();
+    const encryptedData = jwt.decode(token);
+    if (encryptedData) {
+      this.setState({
+        owner: true,
+        ownerId: encryptedData.id,
+        ownerDepartment: encryptedData.departmentId
+      }, () => {
+        this.updateFields();
+      })
+    }
+  }
+
+  updateFields = () => {
+    const { userOptions, departmentOptions, owner, ownerId, users } = this.state;
+    const ownerDepartment = users.find(user => user._id === ownerId).departmentId;
+    const updateddepartmentOptions = departmentOptions.filter(department => department.value !== ownerDepartment);
+    if (owner) {
+      const updateduserOptions = userOptions.filter(user => user.value === ownerId);
+      this.setState({
+        userOptions: updateduserOptions,
+      })
+    }
+    this.setState({
+      departmentOptions: updateddepartmentOptions,
+      ownerDepartment
+    }, () => {
+      this.updateallocationUsers();
+    })
+  }
+
+  updateallocationUsers = () => {
+    const { users, ownerDepartment, selectedDepartment } = this.state;
+    const allocationOptions = users.filter(user => user.departmentId !== ownerDepartment);
+    const formattedAllocationOptions = [];
+    for (let i=0; i< allocationOptions.length; i++) {
+      if (!selectedDepartment || selectedDepartment === allocationOptions[i].departmentId) {
+        formattedAllocationOptions.push({
+          value: allocationOptions[i]._id,
+          label: `${allocationOptions[i].firstName} ${allocationOptions[i].lastName}`,
+        })
+      }
+    }
+    this.setState({
+      allocationOptions: formattedAllocationOptions
+    })
+  }
   
   getDepartments = () => {
     AXIOS.SERVER.get("/department")
@@ -54,7 +106,10 @@ class Form extends BaseComponent {
           })
         }
         this.setState({
+          departments: formattedDepartments,
           departmentOptions: formattedDepartments,
+        }, () => {
+          this.getUsers();
         })
       }
     })
@@ -70,7 +125,6 @@ class Form extends BaseComponent {
   }
 
   getUsers = () => {
-    const { selectedDepartment } = this.state;
     AXIOS.SERVER.get("/user")
     .then(response => {
       const { data } = response.data;
@@ -84,15 +138,17 @@ class Form extends BaseComponent {
       } else {
         const formattedUsers = [];
         for(let i=0; i < data.length; i++) {
-          if (data[i].departmentId === selectedDepartment) {
-            formattedUsers.push({
-              value: data[i]._id,
-              label: data[i].firstName,
-            })
-          }
+          formattedUsers.push({
+            value: data[i]._id,
+            label: `${data[i].firstName} ${data[i].lastName}`,
+          })
         }
         this.setState({
+          users: data,
           userOptions: formattedUsers,
+          allocationOptions: formattedUsers,
+        }, () => {
+          this.verifyToken();
         })
       }
     })
@@ -111,26 +167,53 @@ class Form extends BaseComponent {
     this.setState({showLoader})
   }
 
+  setFields = () => {
+    const { departments } = this.state;
+    this.setState({
+      departmentOptions: departments,
+      selectedDepartment: "",
+      selectedUser: "",
+    }, () => {
+      this.updateFields()
+    })
+  }
+
   onValidSubmit = () => {
-    const { selectedDepartment, selectedUser, message } = this.state;
+    const { selectedDepartment, selectedUser, message, ownerId } = this.state;
     const data = Object.assign({}, {
       departmentId: selectedDepartment,
-      userId: selectedUser,
+      allocatedUserId: selectedUser,
       status: 'PENDING',
+      ownerId,
       message,
     })
     this.showLoader(true)
     AXIOS.SERVER.post('/request/create', data)
     .then(response => {
       this.showLoader(false)
-      this.setState({
-        formSubmissionSuccess: true,
-      })
+      if(response.data.data.error) {
+        this.setState({
+          apiError: {
+            isError: true,
+            data: response.data.error.message,
+          }
+        })
+      } else {
+        this.setState({
+          formSubmissionSuccess: true,
+          apiError: {
+            isError: false,
+            data: ""
+          }
+        })
+      }
     }).catch(err => {
+      this.showLoader(false);
+      console.log(err);
       this.setState({
         apiError: {
           isError: true,
-          data: err.message
+          data: "Error while submitting form",
         }
       })
     })
@@ -139,6 +222,7 @@ class Form extends BaseComponent {
   closeSuccessModal = () => {
     this.setState({
       formSubmissionSuccess: false,
+      ownerId: "",
       message: "",
       selectedUser: "",
       selectedDepartment: "",
@@ -149,9 +233,8 @@ class Form extends BaseComponent {
     })
   }
 
-
   render() {
-    const { departmentOptions, userOptions } = this.state;
+    const { departmentOptions, userOptions, allocationOptions } = this.state;
     return (
       <Fragment>
         {
@@ -173,42 +256,70 @@ class Form extends BaseComponent {
             <div className="form-logo"><p>Submit your Request</p></div>
             <div className="login-form-wrapper">
               <CustomForm onValidSubmit={this.onValidSubmit}>
-                <CustomFormElement
-                  valueLink={this.linkState(this, "selectedDepartment")}
-                  label="Department"
-                  required
-                  validations={[
-                    {
-                      validate: Validator.isRequired,
-                      message: "Department is required"
-                    }
-                  ]}
-                  control={{
-                    type: CustomSelectControl,
-                    settings:{
-                      options: departmentOptions,
-                      multiple: false,
-                      searchable: true,
-                      onChangeCallback: () => {
-                        this.getUsers();
-                      }
-                    }
-                  }}
-                />
+                <Row>
+                  <Col md="6">
+                    <CustomFormElement
+                      valueLink={this.linkState(this, "ownerId")}
+                      label="Created By"
+                      required
+                      validations={[
+                        {
+                          validate: Validator.isRequired,
+                          message: "Created by is required"
+                        }
+                      ]}
+                      control={{
+                        type: CustomSelectControl,
+                        settings:{
+                          options: userOptions,
+                          multiple: false,
+                          searchable: true,
+                          onChangeCallback: () => {
+                            this.setFields();
+                          }
+                        }
+                      }}
+                    />
+                  </Col>
+                  <Col md="6">
+                    <CustomFormElement
+                      valueLink={this.linkState(this, "selectedDepartment")}
+                      label="Department"
+                      required
+                      validations={[
+                        {
+                          validate: Validator.isRequired,
+                          message: "Department is required"
+                        }
+                      ]}
+                      control={{
+                        type: CustomSelectControl,
+                        settings:{
+                          options: departmentOptions,
+                          multiple: false,
+                          searchable: true,
+                          onChangeCallback: () => {
+                            this.updateallocationUsers();
+                          }
+                        }
+                      }}
+                    />
+                  </Col>
+                </Row>
                 <CustomFormElement
                   valueLink={this.linkState(this, "selectedUser")}
-                  label="User"
+                  label="Allocated To"
                   required
                   validations={[
                     {
                       validate: Validator.isRequired,
-                      message: "User is required"
+                      message: "Allocated To is required"
                     }
                   ]}
                   control={{
                     type: CustomSelectControl,
                     settings:{
-                      options: userOptions,
+                      options: allocationOptions,
                       multiple: false,
                       searchable: true,
                     }
@@ -231,6 +342,10 @@ class Form extends BaseComponent {
                     }
                   }}
                 />
+                {
+                  this.state.apiError.isError ? 
+                    <p className="error-text">{this.state.apiError.data}</p> : null
+                }
                 <SubmitButton
                   type="submit"
                   customClass="hbt-btn align-center"

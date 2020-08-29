@@ -7,6 +7,7 @@ import CustomSelectControl from "../../utils/CustomSelectControl";
 import Validator from "../../utils/Validator";
 import SubmitButton from "../../utils/SubmitButton";
 import {TextControl} from "../../utils/TextControl";
+import {withRouter} from 'react-router-dom';
 import SuccessModal from '../../common_components/modals/SuccessModal';
 
 import {Row, Col} from "react-bootstrap";
@@ -108,9 +109,19 @@ class SignUp extends BaseComponent {
     });
   };
 
+  openLoginForm = () => {
+    this.props.history.push('/login')
+  }
+
   closeSuccessModal = () => {
     this.setState({
       openSuccessModal: false,
+      firstName: "",
+      lastName: "",
+      email: "",
+      password: "",
+      phoneNumber: "",
+      selectedDepartment: "",
     })
   }
 
@@ -209,43 +220,49 @@ class SignUp extends BaseComponent {
                     }
                   }}
                 />
-                <CustomFormElement
-                  valueLink={this.linkState(this, "phoneNumber")}
-                  label="Phone Number"
-                  required
-                  validations={[
-                    {
-                      validate: Validator.isRequired,
-                      message: "Phone Number is required"
-                    }
-                  ]}
-                  control={{
-                    type: TextControl,
-                    settings: {
-                      type: TextControl,
-                      placeholder: "",
-                    }
-                  }}
-                />
-                <CustomFormElement
-                  valueLink={this.linkState(this, 'selectedDepartment')}
-                  label="Department"
-                  required
-                  validations={[
-                    {
-                      validate: Validator.isRequired,
-                      message: 'Department is required'
-                    }
-                  ]}
-                  control={{
-                    type: CustomSelectControl,
-                    settings: {
-                      options: departmentOptions,
-                      multiple: false,
-                      searchable: true
-                    }
-                  }}
-                />
+                <Row>
+                  <Col md="6">
+                    <CustomFormElement
+                      valueLink={this.linkState(this, "phoneNumber")}
+                      label="Phone Number"
+                      required
+                      validations={[
+                        {
+                          validate: Validator.isRequired,
+                          message: "Phone Number is required"
+                        }
+                      ]}
+                      control={{
+                        type: TextControl,
+                        settings: {
+                          type: TextControl,
+                          placeholder: "",
+                        }
+                      }}
+                    />
+                  </Col>
+                  <Col>
+                    <CustomFormElement
+                      valueLink={this.linkState(this, 'selectedDepartment')}
+                      label="Department"
+                      required
+                      validations={[
+                        {
+                          validate: Validator.isRequired,
+                          message: 'Department is required'
+                        }
+                      ]}
+                      control={{
+                        type: CustomSelectControl,
+                        settings: {
+                          options: departmentOptions,
+                          multiple: false,
+                          searchable: true
+                        }
+                      }}
+                    />
+                  </Col>
+                </Row>
                 {this.state.apiError.isError ? 
                   <p className="error-text">{this.state.apiError.data}</p> : null}
 
@@ -258,6 +275,14 @@ class SignUp extends BaseComponent {
                   SignUp
                 </SubmitButton>
               </CustomForm>
+              <Row>
+                <Col md="12">
+                  <div className="sign-up-section">
+                    Already have an account?
+                    <span className="sign-up-link" onClick={this.openLoginForm}>Login</span>
+                  </div>
+                </Col>
+              </Row>
             </div>
           </div>
         </div>
@@ -266,4 +291,4 @@ class SignUp extends BaseComponent {
   }
 }
 
-export default SignUp;
+export default withRouter(SignUp);

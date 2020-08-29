@@ -35,7 +35,7 @@ class Rejected extends BaseComponent {
     const encryptedData = jwt.decode(token);
     fetchRequestData().then(response => {
       for (let i=0; i<response.length; i++) {
-        if (response[i].status === 'REJECTED' && response[i].userId === encryptedData.id) {
+        if (response[i].status === 'REJECTED' && response[i].ownerId === encryptedData.id) {
           rejectedRequests.push({
             createdOn: new Date(response[i].createdOn).toDateString(),
             modifiedOn: new Date(response[i].modifiedOn).toDateString(),
@@ -47,12 +47,16 @@ class Rejected extends BaseComponent {
       }
       this.setState({
         rejectedRequests,
+        apiError: {
+          isError: false,
+          data: "",
+        }
       })
     }).catch(err => {
       this.setState({
         apiError: {
           isError: true,
-          data: err.message,
+          data: "Error while fetching Rejected requests",
         }
       })
     })

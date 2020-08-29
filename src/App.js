@@ -12,6 +12,7 @@ import NotFound from "./pages/extra_pages/NotFound";
 import Login from "./pages/login/Login";
 import SignUp from "./pages/signup/SignUp";
 import Requests from './pages/modules/Requests';
+import Assigned from './pages/modules/Assigned';
 import Form from './pages/modules/Form';
 import Approved from './pages/modules/Approved';
 import Pending from './pages/modules/Pending';
@@ -55,6 +56,7 @@ class App extends Component {
       <BrowserRouter>
         <Switch>
           <Route exact path="/form" component={Form}/>
+          <PrivateRoute exact path="/assigned" component={Assigned}/>
           <PrivateRoute exact path="/approved" component={Approved}/>
           <PrivateRoute exact path="/pending" component={Pending}/>
           <PrivateRoute exact path="/rejected" component={Rejected}/>

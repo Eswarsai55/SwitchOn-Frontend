@@ -47,18 +47,17 @@ class Request extends BaseComponent {
     fetchRequestData().then(response => {
       for (let i=0; i<response.length; i++) {
         if (response[i].departmentId === encryptedData.departmentId) {
-          const user = users.find(user => user._id === response[i].userId);
+          const user = users.find(user => user._id === response[i].allocatedUserId);
           requests.push({
             createdOn: new Date(response[i].createdOn).toDateString(),
             modifiedOn: new Date(response[i].modifiedOn).toDateString(),
             reqId: response[i]._id,
             message: response[i].message,
-            allocatedTo: user.firstName + user.lastName,
+            allocatedTo: `${user.firstName} ${user.lastName}`,
             status: response[i].status,
           })
         }
       }
-      console.log(requests)
       this.setState({
         requests,
       })

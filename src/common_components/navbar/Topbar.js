@@ -28,8 +28,13 @@ class Topbar extends BaseComponent {
       <Navbar className="custome-top-navbar">
         <Navbar.Collapse>
           <Nav>
+            
             <NavItem>
               <NavLink to="/form" className={(this.props.activeKey === 1 && "active-nav").toString()}>Form</NavLink>
+            </NavItem>
+
+            <NavItem>
+              <NavLink to="/assigned" className={(this.props.activeKey === 6 && "active-nav").toString()}>Assigned</NavLink>
             </NavItem>
 
             <NavItem>

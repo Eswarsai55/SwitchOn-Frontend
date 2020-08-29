@@ -33,7 +33,7 @@ class Approved extends BaseComponent {
     const encryptedData = jwt.decode(token)
     fetchRequestData().then(response => {
       for (let i=0; i<response.length; i++) {
-        if (response[i].status === 'APPROVED' && response[i].userId === encryptedData.id) {
+        if (response[i].status === 'APPROVED' && response[i].ownerId === encryptedData.id) {
           approvedRequests.push({
             createdOn: new Date(response[i].createdOn).toDateString(),
             modifiedOn: new Date(response[i].modifiedOn).toDateString(),
@@ -44,12 +44,16 @@ class Approved extends BaseComponent {
       }
       this.setState({
         approvedRequests,
+        apiError: {
+          isError: false,
+          data: "",
+        }
       })
     }).catch(err => {
       this.setState({
         apiError: {
           isError: true,
-          data: err.message,
+          data: "Error while fetching Approved requests",
         }
       })
     })
