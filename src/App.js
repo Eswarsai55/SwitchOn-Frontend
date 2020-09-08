@@ -1,5 +1,6 @@
 import React, {Component} from 'react';
 import {BrowserRouter, Route, Switch, Redirect} from 'react-router-dom';
+import { Provider } from 'react-redux';
 
 import "react-bootstrap-table-next/dist/react-bootstrap-table2.min.css";
 
@@ -52,21 +53,24 @@ class App extends Component {
   }
 
   render() {
+    const { store } = this.props;
     return (
-      <BrowserRouter>
-        <Switch>
-          <Route exact path="/form" component={Form}/>
-          <PrivateRoute exact path="/assigned" component={Assigned}/>
-          <PrivateRoute exact path="/approved" component={Approved}/>
-          <PrivateRoute exact path="/pending" component={Pending}/>
-          <PrivateRoute exact path="/rejected" component={Rejected}/>
-          <PrivateRoute exact path="/requests" component={Requests}/>
-          <Route exact path="/signup" component={SignUp}/>
-          <Route exact path="/login" component={Login}/>
-          <Route exact path="/" component={Home}/>
-          <Route path="/" component={NotFound}/>
-        </Switch>
-      </BrowserRouter>
+      <Provider store={store}>
+        <BrowserRouter>
+          <Switch>
+            <Route exact path="/form" component={Form}/>
+            <PrivateRoute exact path="/assigned" component={Assigned}/>
+            <PrivateRoute exact path="/approved" component={Approved}/>
+            <PrivateRoute exact path="/pending" component={Pending}/>
+            <PrivateRoute exact path="/rejected" component={Rejected}/>
+            <PrivateRoute exact path="/requests" component={Requests}/>
+            <Route exact path="/signup" component={SignUp}/>
+            <Route exact path="/login" component={Login}/>
+            <Route exact path="/" component={Home}/>
+            <Route path="/" component={NotFound}/>
+          </Switch>
+        </BrowserRouter>
+      </Provider>
     );
   }
 }

@@ -43,7 +43,10 @@ class Login extends BaseComponent {
       if (response.data.error) {
         this.setState({
           inProgress: false,
-          apiError: {isError: response.data.error, data: response.data.message}
+          apiError: {
+            isError: response.data.error, 
+            data: response.data.message
+          }
         });
       } else {
         deleteToken();

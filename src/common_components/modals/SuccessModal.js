@@ -1,7 +1,6 @@
 import React, { Fragment } from 'react';
 import { Modal, Row, Col } from 'react-bootstrap';
 import BaseComponent from '../../utils/BaseComponent';
-import Login from '../../pages/login/Login';
 import { withRouter } from 'react-router-dom';
 
 class SuccessModal extends BaseComponent {

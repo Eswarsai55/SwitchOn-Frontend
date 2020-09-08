@@ -12,10 +12,12 @@ import {TextControl} from "../../utils/TextControl";
 import AXIOS from '../../utils/Axios';
 import jwt from 'jsonwebtoken';
 import { getToken } from '../../utils/ManageToken';
-import getUser from '../../actions/getUser';
+import getUsers from '../../actions/getUser';
+import getDepartments from '../../actions/getDepartments';
 import CustomSelectControl from "../../utils/CustomSelectControl";
 import SuccessModal from "../../common_components/modals/SuccessModal";
 import { withRouter } from 'react-router-dom';
+import { connect } from 'react-redux';
 
 class Form extends BaseComponent {
   constructor(props) {
@@ -33,8 +35,18 @@ class Form extends BaseComponent {
     }
   }
 
+  // componentWillMount = () => {
+  //   const { dispatch } = this.props;
+  //   dispatch(getDepartments());
+  //   dispatch(getUsers());
+  // }
+
   componentDidMount = () => {
-    this.getDepartments();
+    const { dispatch } = this.props;
+    dispatch(getDepartments());
+    dispatch(getUsers());
+    //console.log(this.props);
+    this.verifyToken();
   }
 
   verifyToken = () => {
@@ -53,6 +65,7 @@ class Form extends BaseComponent {
 
   updateFields = () => {
     const { userOptions, departmentOptions, owner, ownerId, users } = this.state;
+    console.log(this.props.departmentData);
     const ownerDepartment = users.find(user => user._id === ownerId).departmentId;
     const updateddepartmentOptions = departmentOptions.filter(department => department.value !== ownerDepartment);
     if (owner) {
@@ -235,6 +248,7 @@ class Form extends BaseComponent {
 
   render() {
     const { departmentOptions, userOptions, allocationOptions } = this.state;
+    console.log(this.props);
     return (
       <Fragment>
         {
@@ -363,4 +377,15 @@ class Form extends BaseComponent {
   }
 }
 
-export default withRouter(Form);
+const mapStateToProps = state => ({
+  departmentData: state.department.departmentData,
+  error: state.department.error,
+  isFetching: state.department.fetching,
+  userData: state.user.userData
+});
+
+const mapDispatchToProps = dispatch => ({
+  dispatch
+});
+
+export default connect(mapStateToProps, mapDispatchToProps)(withRouter(Form));

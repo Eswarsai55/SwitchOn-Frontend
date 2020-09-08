@@ -1,17 +1,15 @@
 import React, {Fragment} from "react";
 import Topbar from "../../common_components/navbar/Topbar";
-import {Button, Col, Grid, Row} from "react-bootstrap";
+import { Col, Grid, Row } from "react-bootstrap";
 
 import BaseComponent from "../../utils/BaseComponent";
 import BootstrapTable from "react-bootstrap-table-next";
 import paginationFactory from "react-bootstrap-table2-paginator";
 import ToolkitProvider, {Search} from "react-bootstrap-table2-toolkit";
 import { COLUMNS } from '../constants/data';
-import _ from 'lodash';
 import fetchRequestData from '../../actions/getrequestData';
 import { getToken } from '../../utils/ManageToken';
 import jwt from 'jsonwebtoken';
-import ConfirmationModal from "../../common_components/modals/ConfirmationModal";
 
 class Pending extends BaseComponent {
   constructor() {
