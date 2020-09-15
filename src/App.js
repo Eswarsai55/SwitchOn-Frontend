@@ -1,6 +1,7 @@
 import React, {Component} from 'react';
 import {BrowserRouter, Route, Switch, Redirect} from 'react-router-dom';
 import { Provider } from 'react-redux';
+import { persistStore } from 'redux-persist';
 
 import "react-bootstrap-table-next/dist/react-bootstrap-table2.min.css";
 
@@ -47,6 +48,10 @@ const Home = () => (
 );
 
 class App extends Component {
+  constructor(props) {
+    super(props);
+    this.persistor = persistStore(props.store);
+  }
   static requireAuth() {
     const token = getToken();
     return !token;

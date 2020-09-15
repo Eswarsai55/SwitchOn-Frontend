@@ -35,18 +35,37 @@ class Form extends BaseComponent {
     }
   }
 
-  // componentWillMount = () => {
-  //   const { dispatch } = this.props;
-  //   dispatch(getDepartments());
-  //   dispatch(getUsers());
-  // }
-
   componentDidMount = () => {
     const { dispatch } = this.props;
     dispatch(getDepartments());
     dispatch(getUsers());
-    //console.log(this.props);
-    this.verifyToken();
+  }
+
+  componentWillReceiveProps = (nextProps) => {
+    const { userData, departmentData } = nextProps;
+    const formattedDepartments = [];
+    for(let i=0; i < departmentData.length; i++) {
+      formattedDepartments.push({
+        value: departmentData[i]._id,
+        label: departmentData[i].departmentName,
+      })
+    }
+    const formattedUsers = [];
+    for(let i=0; i < userData.length; i++) {
+      formattedUsers.push({
+        value: userData[i]._id,
+        label: `${userData[i].firstName} ${userData[i].lastName}`,
+      })
+    }
+    this.setState({
+      users: userData,
+      departmentOptions: formattedDepartments,
+      departments: formattedDepartments,
+      userOptions: formattedUsers,
+      allocationOptions: formattedUsers,
+    }, () => {
+      this.verifyToken()
+    })
   }
 
   verifyToken = () => {
@@ -65,7 +84,6 @@ class Form extends BaseComponent {
 
   updateFields = () => {
     const { userOptions, departmentOptions, owner, ownerId, users } = this.state;
-    console.log(this.props.departmentData);
     const ownerDepartment = users.find(user => user._id === ownerId).departmentId;
     const updateddepartmentOptions = departmentOptions.filter(department => department.value !== ownerDepartment);
     if (owner) {
@@ -96,83 +114,6 @@ class Form extends BaseComponent {
     }
     this.setState({
       allocationOptions: formattedAllocationOptions
-    })
-  }
-  
-  getDepartments = () => {
-    AXIOS.SERVER.get("/department")
-    .then(response => {
-      const { data } = response.data;
-      if(response.data.data.error) {
-        this.setState({
-          apiError: {
-            isError: response.data.error,
-            data: response.data.message
-          }
-        })
-      } else {
-        const formattedDepartments = [];
-        for(let i=0; i < data.length; i++) {
-          formattedDepartments.push({
-            value: data[i]._id,
-            label: data[i].departmentName,
-          })
-        }
-        this.setState({
-          departments: formattedDepartments,
-          departmentOptions: formattedDepartments,
-        }, () => {
-          this.getUsers();
-        })
-      }
-    })
-    .catch(err => {
-      this.setState({
-        inProgress: false,
-        apiError: {
-          isError: true,
-          data: err.message
-        }
-      })
-    })
-  }
-
-  getUsers = () => {
-    AXIOS.SERVER.get("/user")
-    .then(response => {
-      const { data } = response.data;
-      if(response.data.data.error) {
-        this.setState({
-          apiError: {
-            isError: response.data.error,
-            data: response.data.message
-          }
-        })
-      } else {
-        const formattedUsers = [];
-        for(let i=0; i < data.length; i++) {
-          formattedUsers.push({
-            value: data[i]._id,
-            label: `${data[i].firstName} ${data[i].lastName}`,
-          })
-        }
-        this.setState({
-          users: data,
-          userOptions: formattedUsers,
-          allocationOptions: formattedUsers,
-        }, () => {
-          this.verifyToken();
-        })
-      }
-    })
-    .catch(err => {
-      this.setState({
-        inProgress: false,
-        apiError: {
-          isError: true,
-          data: err.message
-        }
-      })
     })
   }
 
@@ -222,7 +163,6 @@ class Form extends BaseComponent {
       }
     }).catch(err => {
       this.showLoader(false);
-      console.log(err);
       this.setState({
         apiError: {
           isError: true,
@@ -248,7 +188,6 @@ class Form extends BaseComponent {
 
   render() {
     const { departmentOptions, userOptions, allocationOptions } = this.state;
-    console.log(this.props);
     return (
       <Fragment>
         {
@@ -378,10 +317,11 @@ class Form extends BaseComponent {
 }
 
 const mapStateToProps = state => ({
+  requestData: state.request.requestData,
+  userData: state.user.userData,
   departmentData: state.department.departmentData,
   error: state.department.error,
   isFetching: state.department.fetching,
-  userData: state.user.userData
 });
 
 const mapDispatchToProps = dispatch => ({

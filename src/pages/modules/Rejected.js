@@ -10,66 +10,31 @@ import { COLUMNS } from '../constants/data'
 import _ from 'lodash';
 import { getToken } from '../../utils/ManageToken';
 import jwt from 'jsonwebtoken';
-import fetchRequestData from '../../actions/getrequestData';
-
+import { connect } from 'react-redux';
 
 class Rejected extends BaseComponent {
-  constructor() {
-    super();
-    this.state = {
-      rejectedRequests: [],
-      apiError: {
-        isError: false,
-        data: ""
-      }
-    }
-  }
-
-  componentDidMount = () => {
-    this.getRejectedRequests();
-  }
-
-  getRejectedRequests = () => {
-    const rejectedRequests = [];
-    const token = getToken();
-    const encryptedData = jwt.decode(token);
-    fetchRequestData().then(response => {
-      for (let i=0; i<response.length; i++) {
-        if (response[i].status === 'REJECTED' && response[i].ownerId === encryptedData.id) {
-          rejectedRequests.push({
-            createdOn: new Date(response[i].createdOn).toDateString(),
-            modifiedOn: new Date(response[i].modifiedOn).toDateString(),
-            reqId: response[i]._id,
-            message: response[i].message,
-            rejectedReason: response[i].reason,
-          })
-        }
-      }
-      this.setState({
-        rejectedRequests,
-        apiError: {
-          isError: false,
-          data: "",
-        }
-      })
-    }).catch(err => {
-      this.setState({
-        apiError: {
-          isError: true,
-          data: "Error while fetching Rejected requests",
-        }
-      })
-    })
-  }
-
   render() {
     const { SearchBar } = Search;
-    const { rejectedRequests, apiError } = this.state;
+    const { requestData } = this.props;
     const updatedColumns = _.cloneDeep(COLUMNS);
     updatedColumns.push({
       dataField: 'rejectedReason',
       text: 'RejectedReason'
     })
+    const rejectedRequests = [];
+    const token = getToken();
+    const encryptedData = jwt.decode(token);
+    for (let i=0; i<requestData.length; i++) {
+      if (requestData[i].status === 'REJECTED' && requestData[i].ownerId === encryptedData.id) {
+        rejectedRequests.push({
+          createdOn: new Date(requestData[i].createdOn).toDateString(),
+          modifiedOn: new Date(requestData[i].modifiedOn).toDateString(),
+          reqId: requestData[i]._id,
+          message: requestData[i].message,
+          rejectedReason: requestData[i].reason,
+        })
+      }
+    }
     return (
       <Fragment>
         <Grid fluid>
@@ -86,7 +51,6 @@ class Rejected extends BaseComponent {
                 </Row>
                 <Row>
                   <Col className="table-wrapper" md={12}>
-                    {apiError.isError && <p className="error-text">{apiError.data}</p>}
                     <ToolkitProvider keyField="id" data={rejectedRequests} columns={updatedColumns} search>
                       {props => (
                         <div>
@@ -118,4 +82,14 @@ class Rejected extends BaseComponent {
   }
 }
 
-export default Rejected;
+const mapStateToProps = state => ({
+  requestData: state.request.requestData,
+  error: state.request.error,
+  fetching: state.request.fetching,
+});
+
+const mapDispatchToProps = dispatch => ({
+  dispatch
+});
+
+export default connect(mapStateToProps, mapDispatchToProps)(Rejected);

@@ -10,11 +10,20 @@ import * as serviceWorker from './serviceWorker';
 import { createStore, applyMiddleware } from 'redux';
 import rootReducer from './rootReducer';
 import thunk from 'redux-thunk';
+import { persistReducer } from 'redux-persist';
+import storage from 'redux-persist/lib/storage';
 import { composeWithDevTools } from 'redux-devtools-extension';
+
+const persistConfig = {
+  key: 'primary',
+  storage,
+}
+
+const persistedReducer = persistReducer(persistConfig, rootReducer)
 
 const middleware = [thunk];
 const store = createStore(
-  rootReducer,// where we combine all the reducersfor different actions to dispatch on redux
+  persistedReducer,
   composeWithDevTools(applyMiddleware(...middleware))
 )
 

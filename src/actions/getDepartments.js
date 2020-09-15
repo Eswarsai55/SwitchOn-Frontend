@@ -15,7 +15,7 @@ const getDepartmentData = () => {
         return;
       }
       const { data } = xhrResponse.data;
-      dispatch({type:FETCH_DEPARTMENT_SUCCESS, data})
+      dispatch({type: FETCH_DEPARTMENT_SUCCESS, data});
     }).catch(xhrResponse => {
       const response = xhrResponse.data || {};
       const message = (response && response.message) || 'Failed to fetch department data';

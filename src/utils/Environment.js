@@ -1,3 +1,3 @@
-let apiEndpoint = 'http://localhost:9500/api';
+let apiEndpoint = 'http://localhost:5600/api';
 
 export const baseUrl = apiEndpoint;

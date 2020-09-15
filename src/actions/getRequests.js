@@ -2,7 +2,7 @@ import AXIOS from '../utils/Axios';
 import {
   FETCH_REQUEST_FAILURE,
   FETCH_REQUEST_SUCCESS,
-} from '../actions/constants/types';
+} from './constants/types';
 
 const getRequestData = () => {
   return (dispatch) => {
