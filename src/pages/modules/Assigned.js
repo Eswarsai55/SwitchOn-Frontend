@@ -8,60 +8,14 @@ import paginationFactory from "react-bootstrap-table2-paginator";
 import ToolkitProvider, {Search} from "react-bootstrap-table2-toolkit";
 import { COLUMNS } from '../constants/data';
 import _ from 'lodash';
-import fetchRequestData from '../../actions/getrequestData';
 import { getToken } from '../../utils/ManageToken';
+import getRequests from '../../actions/getRequests';
 import jwt from 'jsonwebtoken';
 import AXIOS from "../../utils/Axios";
+import { connect } from 'react-redux';
 import ConfirmationModal from "../../common_components/modals/ConfirmationModal";
 
 class Assigned extends BaseComponent {
-  constructor() {
-    super();
-    this.state = {
-      assignedRequests: [],
-      apiError: {
-        isError: false,
-        data: ""
-      }
-    }
-  }
-  
-  componentDidMount = () => {
-    this.getAssignedRequests();
-  }
-
-  getAssignedRequests = () => {
-    const assignedRequests = [];
-    const token = getToken();
-    const encryptedData = jwt.decode(token)
-    fetchRequestData().then(response => {
-      for(let i=0;i<response.length; i++) {
-        if(response[i].status === 'PENDING' && response[i].allocatedUserId === encryptedData.id) {
-          assignedRequests.push({
-            reqId: response[i]._id,
-            createdOn: new Date(response[i].createdOn).toDateString(),
-            modifiedOn: new Date(response[i].modifiedOn).toDateString(),
-            message: response[i].message,
-            action: this.addButtons(response[i]),
-          })
-        }
-      }
-      this.setState({
-        assignedRequests,
-        apiError: {
-          isError: false,
-          data: "",
-        }
-      })
-    }).catch(err => {
-      this.setState({
-        apiError: {
-          isError: true,
-          data: err.message,
-        }
-      })
-    })
-  }
 
   addButtons = (requestData) => {
     const btnStyle = {
@@ -81,14 +35,14 @@ class Assigned extends BaseComponent {
   }
 
   approveRequest = (requestData) => {
+    const { dispatch } = this.props;
     const { _id } = requestData;
     const data = Object.assign({}, {
       'id': _id,
       'status': 'APPROVED'
     })
     AXIOS.SERVER.put('/request/update', data).then(response => {
-      this.getAssignedRequests();
-
+      dispatch(getRequests());
     }).catch(err => {
       this.setState({
         apiError: {
@@ -110,6 +64,7 @@ class Assigned extends BaseComponent {
   };
 
   rejectRequest = (id, reason) => {
+    const { dispatch } = this.props;
     const data = Object.assign({}, {
       id,
       'status': 'REJECTED',
@@ -120,7 +75,7 @@ class Assigned extends BaseComponent {
         confirmationModal: false,
         id: "",
       })
-      this.getAssignedRequests();
+      dispatch(getRequests());
     }).catch(err => {
       this.setState({
         apiError: {
@@ -139,7 +94,21 @@ class Assigned extends BaseComponent {
 
   render() {
     const { SearchBar } = Search;
-    const { assignedRequests, apiError } = this.state;
+    const { requestData } = this.props;
+    const assignedRequests = [];
+    const token = getToken();
+    const encryptedData = jwt.decode(token)
+    for(let i=0;i<requestData.length; i++) {
+      if(requestData[i].status === 'PENDING' && requestData[i].allocatedUserId === encryptedData.id) {
+        assignedRequests.push({
+          reqId: requestData[i]._id,
+          createdOn: new Date(requestData[i].createdOn).toDateString(),
+          modifiedOn: new Date(requestData[i].modifiedOn).toDateString(),
+          message: requestData[i].message,
+          action: this.addButtons(requestData[i]),
+        })
+      }
+    }
     const updatedColumns = _.cloneDeep(COLUMNS);
     updatedColumns.push({
       dataField: 'action',
@@ -160,12 +129,11 @@ class Assigned extends BaseComponent {
               <Grid className="main-container">
                 <Row className="pd-t-2 pd-b-2 pd-r-1 pd-l-1">
                   <Col md={12}>
-                    <h2>List of Pending Requests</h2>
+                    <h2>List of Assigned Requests</h2>
                   </Col>
                 </Row>
                 <Row>
                   <Col className="table-wrapper" md={12}>
-                    {apiError.isError && <p className="error-text">{apiError.data}</p>}
                     <ToolkitProvider keyField="id" data={assignedRequests} columns={updatedColumns} search>
                       {props => (
                         <div>
@@ -197,4 +165,14 @@ class Assigned extends BaseComponent {
   }
 }
 
-export default Assigned;
+const mapStateToProps = state => ({
+  requestData: state.request.requestData,
+  error: state.request.error,
+  fetching: state.request.fetching,
+});
+
+const mapDispatchToProps = dispatch => ({
+  dispatch
+});
+
+export default connect(mapStateToProps, mapDispatchToProps)(Assigned);

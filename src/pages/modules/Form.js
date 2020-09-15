@@ -12,10 +12,12 @@ import {TextControl} from "../../utils/TextControl";
 import AXIOS from '../../utils/Axios';
 import jwt from 'jsonwebtoken';
 import { getToken } from '../../utils/ManageToken';
-import getUser from '../../actions/getUser';
+import getUsers from '../../actions/getUser';
+import getDepartments from '../../actions/getDepartments';
 import CustomSelectControl from "../../utils/CustomSelectControl";
 import SuccessModal from "../../common_components/modals/SuccessModal";
 import { withRouter } from 'react-router-dom';
+import { connect } from 'react-redux';
 
 class Form extends BaseComponent {
   constructor(props) {
@@ -34,7 +36,36 @@ class Form extends BaseComponent {
   }
 
   componentDidMount = () => {
-    this.getDepartments();
+    const { dispatch } = this.props;
+    dispatch(getDepartments());
+    dispatch(getUsers());
+  }
+
+  componentWillReceiveProps = (nextProps) => {
+    const { userData, departmentData } = nextProps;
+    const formattedDepartments = [];
+    for(let i=0; i < departmentData.length; i++) {
+      formattedDepartments.push({
+        value: departmentData[i]._id,
+        label: departmentData[i].departmentName,
+      })
+    }
+    const formattedUsers = [];
+    for(let i=0; i < userData.length; i++) {
+      formattedUsers.push({
+        value: userData[i]._id,
+        label: `${userData[i].firstName} ${userData[i].lastName}`,
+      })
+    }
+    this.setState({
+      users: userData,
+      departmentOptions: formattedDepartments,
+      departments: formattedDepartments,
+      userOptions: formattedUsers,
+      allocationOptions: formattedUsers,
+    }, () => {
+      this.verifyToken()
+    })
   }
 
   verifyToken = () => {
@@ -85,83 +116,6 @@ class Form extends BaseComponent {
       allocationOptions: formattedAllocationOptions
     })
   }
-  
-  getDepartments = () => {
-    AXIOS.SERVER.get("/department")
-    .then(response => {
-      const { data } = response.data;
-      if(response.data.data.error) {
-        this.setState({
-          apiError: {
-            isError: response.data.error,
-            data: response.data.message
-          }
-        })
-      } else {
-        const formattedDepartments = [];
-        for(let i=0; i < data.length; i++) {
-          formattedDepartments.push({
-            value: data[i]._id,
-            label: data[i].departmentName,
-          })
-        }
-        this.setState({
-          departments: formattedDepartments,
-          departmentOptions: formattedDepartments,
-        }, () => {
-          this.getUsers();
-        })
-      }
-    })
-    .catch(err => {
-      this.setState({
-        inProgress: false,
-        apiError: {
-          isError: true,
-          data: err.message
-        }
-      })
-    })
-  }
-
-  getUsers = () => {
-    AXIOS.SERVER.get("/user")
-    .then(response => {
-      const { data } = response.data;
-      if(response.data.data.error) {
-        this.setState({
-          apiError: {
-            isError: response.data.error,
-            data: response.data.message
-          }
-        })
-      } else {
-        const formattedUsers = [];
-        for(let i=0; i < data.length; i++) {
-          formattedUsers.push({
-            value: data[i]._id,
-            label: `${data[i].firstName} ${data[i].lastName}`,
-          })
-        }
-        this.setState({
-          users: data,
-          userOptions: formattedUsers,
-          allocationOptions: formattedUsers,
-        }, () => {
-          this.verifyToken();
-        })
-      }
-    })
-    .catch(err => {
-      this.setState({
-        inProgress: false,
-        apiError: {
-          isError: true,
-          data: err.message
-        }
-      })
-    })
-  }
 
   showLoader = (showLoader) => {
     this.setState({showLoader})
@@ -209,7 +163,6 @@ class Form extends BaseComponent {
       }
     }).catch(err => {
       this.showLoader(false);
-      console.log(err);
       this.setState({
         apiError: {
           isError: true,
@@ -363,4 +316,16 @@ class Form extends BaseComponent {
   }
 }
 
-export default withRouter(Form);
+const mapStateToProps = state => ({
+  requestData: state.request.requestData,
+  userData: state.user.userData,
+  departmentData: state.department.departmentData,
+  error: state.department.error,
+  isFetching: state.department.fetching,
+});
+
+const mapDispatchToProps = dispatch => ({
+  dispatch
+});
+
+export default connect(mapStateToProps, mapDispatchToProps)(withRouter(Form));

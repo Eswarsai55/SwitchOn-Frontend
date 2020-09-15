@@ -11,6 +11,8 @@ import {withRouter} from 'react-router-dom';
 import SuccessModal from '../../common_components/modals/SuccessModal';
 
 import {Row, Col} from "react-bootstrap";
+import { connect } from 'react-redux';
+import getDepartments from '../../actions/getDepartments';
 import AXIOS from '../../utils/Axios';
 
 
@@ -39,38 +41,35 @@ class SignUp extends BaseComponent {
   }
 
   getDepartments = () => {
-    AXIOS.SERVER.get("/department")
-    .then(response => {
-      const { data } = response.data;
-      if(response.data.data.error) {
+    const { dispatch } = this.props;
+    dispatch(getDepartments())
+  }
+
+  componentWillReceiveProps(nextProps) {
+    const { fetching, error, departmentData} = nextProps;
+    if (!fetching) {
+      if (error) {
         this.setState({
+          inProgress: false,
           apiError: {
-            isError: response.data.error,
-            data: response.data.message
+            isError: true,
+            data: error
           }
         })
       } else {
         const formattedDepartments = [];
-        for(let i=0; i < data.length; i++) {
+        for(let i=0; i < departmentData.length; i++) {
           formattedDepartments.push({
-            value: data[i]._id,
-            label: data[i].departmentName,
+            value: departmentData[i]._id,
+            label: departmentData[i].departmentName,
           })
         }
         this.setState({
+          inProgress: false,
           departmentOptions: formattedDepartments,
         })
       }
-    })
-    .catch(err => {
-      this.setState({
-        inProgress: false,
-        apiError: {
-          isError: true,
-          data: err.message
-        }
-      })
-    })
+    }
   }
 
   onValidSubmit = () => {
@@ -290,4 +289,14 @@ class SignUp extends BaseComponent {
   }
 }
 
-export default withRouter(SignUp);
+const mapStateToProps = state => ({
+  departmentData: state.department.departmentData,
+  error: state.department.error,
+  isFetching: state.department.fetching,
+});
+
+const mapDispatchToProps = dispatch => ({
+  dispatch
+});
+
+export default connect(mapStateToProps, mapDispatchToProps)(withRouter(SignUp));

@@ -11,7 +11,8 @@ import {TextControl} from "../../utils/TextControl";
 import {deleteToken} from "../../utils/ManageToken";
 import {Row, Col} from "react-bootstrap";
 import AXIOS from '../../utils/Axios';
-
+import getRequests from '../../actions/getRequests';
+import { connect } from 'react-redux';
 
 class Login extends BaseComponent {
   constructor(props) {
@@ -33,6 +34,7 @@ class Login extends BaseComponent {
 
   onValidSubmit = () => {
     const { email, password } = this.state;
+    const { dispatch } = this.props;
     const data = Object.assign({}, {
       email,
       password,
@@ -43,7 +45,10 @@ class Login extends BaseComponent {
       if (response.data.error) {
         this.setState({
           inProgress: false,
-          apiError: {isError: response.data.error, data: response.data.message}
+          apiError: {
+            isError: response.data.error, 
+            data: response.data.message
+          }
         });
       } else {
         deleteToken();
@@ -52,6 +57,7 @@ class Login extends BaseComponent {
         this.setState({
           inProgress: false,
         });
+        dispatch(getRequests());
         this.props.history.push('/form');
       }
     })
@@ -145,4 +151,14 @@ class Login extends BaseComponent {
   }
 }
 
-export default withRouter(Login);
+const mapStateToProps = state => ({
+  requestData: state.request.requestData,
+  error: state.request.error,
+  fetching: state.request.fetching,
+});
+
+const mapDispatchToProps = dispatch => ({
+  dispatch
+});
+
+export default connect(mapStateToProps, mapDispatchToProps)(withRouter(Login));

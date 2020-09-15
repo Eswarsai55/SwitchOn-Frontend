@@ -6,64 +6,29 @@ import BaseComponent from "../../utils/BaseComponent";
 import BootstrapTable from "react-bootstrap-table-next";
 import paginationFactory from "react-bootstrap-table2-paginator";
 import ToolkitProvider, {Search} from "react-bootstrap-table2-toolkit";
-import fetchRequestData from '../../actions/getrequestData';
+import fetchRequestData from '../../actions/getRequests';
 import { COLUMNS } from '../constants/data';
 import { getToken } from '../../utils/ManageToken';
 import jwt from 'jsonwebtoken';
+import { connect } from 'react-redux';
 
 class Approved extends BaseComponent {
-  constructor() {
-    super();
-    this.state = {
-      approvedRequests: [],
-      apiError: {
-        isError: false,
-        data: ""
-      }
-    }
-  }
-
-  componentDidMount = () => {
-    this.getApprovedRequests();
-  }
-
-  getApprovedRequests = () => {
-    const approvedRequests = [];
-    const token = getToken();
-    const encryptedData = jwt.decode(token)
-    fetchRequestData().then(response => {
-      for (let i=0; i<response.length; i++) {
-        if (response[i].status === 'APPROVED' && response[i].ownerId === encryptedData.id) {
-          approvedRequests.push({
-            createdOn: new Date(response[i].createdOn).toDateString(),
-            modifiedOn: new Date(response[i].modifiedOn).toDateString(),
-            reqId: response[i]._id,
-            message: response[i].message,
-          })
-        }
-      }
-      this.setState({
-        approvedRequests,
-        apiError: {
-          isError: false,
-          data: "",
-        }
-      })
-    }).catch(err => {
-      this.setState({
-        apiError: {
-          isError: true,
-          data: "Error while fetching Approved requests",
-        }
-      })
-    })
-  }
-
-
-
   render() {
     const { SearchBar } = Search;
-    const { approvedRequests, apiError } = this.state;
+    const { requestData } = this.props;
+    const approvedRequests = [];
+    const token = getToken();
+    const encryptedData = jwt.decode(token);
+    for (let i=0; i<requestData.length; i++) {
+      if (requestData[i].status === 'APPROVED' && requestData[i].ownerId === encryptedData.id) {
+        approvedRequests.push({
+          createdOn: new Date(requestData[i].createdOn).toDateString(),
+          modifiedOn: new Date(requestData[i].modifiedOn).toDateString(),
+          reqId: requestData[i]._id,
+          message: requestData[i].message,
+        })
+      }
+    }
     return (
       <Fragment>
         <Grid fluid>
@@ -80,7 +45,6 @@ class Approved extends BaseComponent {
                 </Row>
                 <Row>
                   <Col className="table-wrapper" md={12}>
-                    {apiError.isError && <p className="error-text">{apiError.data}</p>}
                     <ToolkitProvider keyField="id" data={approvedRequests} columns={COLUMNS} search>
                       {props => (
                         <div>
@@ -112,4 +76,14 @@ class Approved extends BaseComponent {
   }
 }
 
-export default Approved;
+const mapStateToProps = state => ({
+  requestData: state.request.requestData,
+  error: state.request.error,
+  fetching: state.request.fetching,
+});
+
+const mapDispatchToProps = dispatch => ({
+  dispatch
+});
+
+export default connect(mapStateToProps, mapDispatchToProps)(Approved);

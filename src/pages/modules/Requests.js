@@ -10,70 +10,15 @@ import { COLUMNS } from '../constants/data'
 import _ from 'lodash';
 import { getToken } from '../../utils/ManageToken';
 import jwt from 'jsonwebtoken';
-import fetchRequestData from '../../actions/getrequestData';
-import getUser from '../../actions/getUser';
+import { connect } from 'react-redux';
 
 class Request extends BaseComponent {
-  constructor() {
-    super();
-    this.state = {
-      requests: [],
-      apiError: {
-        isError: false,
-        data: ""
-      }
-    }
-  }
-
-  componentDidMount = () => {
-    this.getUsers();
-  }
-
-  getUsers = () => {
-    getUser().then(users => {
-      this.setState({
-        users
-      }, () => {
-        this.getRequests();
-      })
-    })
-  }
-
-  getRequests = () => {
-    const requests = [];
-    const token = getToken();
-    const encryptedData = jwt.decode(token);
-    const { users } = this.state;
-    fetchRequestData().then(response => {
-      for (let i=0; i<response.length; i++) {
-        if (response[i].departmentId === encryptedData.departmentId) {
-          const user = users.find(user => user._id === response[i].allocatedUserId);
-          requests.push({
-            createdOn: new Date(response[i].createdOn).toDateString(),
-            modifiedOn: new Date(response[i].modifiedOn).toDateString(),
-            reqId: response[i]._id,
-            message: response[i].message,
-            allocatedTo: `${user.firstName} ${user.lastName}`,
-            status: response[i].status,
-          })
-        }
-      }
-      this.setState({
-        requests,
-      })
-    }).catch(err => {
-      this.setState({
-        apiError: {
-          isError: true,
-          data: err.message,
-        }
-      })
-    })
-  }
-  
   render() {
     const { SearchBar } = Search;
-    const { requests, apiError } = this.state;
+    const { requestData, userData } = this.props;
+    const token = getToken();
+    const encryptedData = jwt.decode(token);
+    let requests = [];
     const updatedColumns = _.cloneDeep(COLUMNS);
     updatedColumns.splice(1,0,{
       dataField: 'allocatedTo',
@@ -82,6 +27,20 @@ class Request extends BaseComponent {
       dataField: 'status',
       text: 'Status',
     })
+    for (let i=0; i<requestData.length; i++) {
+      if (requestData[i].departmentId === encryptedData.departmentId) {
+        const user = userData.find(user => user._id === requestData[i].allocatedUserId);
+        requests.push({
+          createdOn: new Date(requestData[i].createdOn).toDateString(),
+          modifiedOn: new Date(requestData[i].modifiedOn).toDateString(),
+          reqId: requestData[i]._id,
+          message: requestData[i].message,
+          allocatedTo: `${user.firstName} ${user.lastName}`,
+          status: requestData[i].status,
+        })
+      }
+    }
+    
     return (
       <Fragment>
         <Grid fluid>
@@ -98,7 +57,6 @@ class Request extends BaseComponent {
                 </Row>
                 <Row>
                   <Col className="table-wrapper" md={12}>
-                    {apiError.isError && <p className="error-text">{apiError.data}</p>}
                     <ToolkitProvider keyField="id" data={requests} columns={updatedColumns} search>
                       {props => (
                         <div>
@@ -130,4 +88,15 @@ class Request extends BaseComponent {
   }
 }
 
-export default Request;
+const mapStateToProps = (state) => ({
+  requestData: state.request.requestData,
+  error: state.request.error,
+  fetching: state.request.fetching,
+  userData: state.user.userData,
+});
+
+const mapDispatchToProps = dispatch => ({
+  dispatch
+});
+
+export default connect(mapStateToProps, mapDispatchToProps)(Request);
